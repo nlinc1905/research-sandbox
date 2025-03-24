@@ -1,0 +1,9 @@
+beanie==1.29.0
+mongomock==4.3.0
+mongomock_motor
+motor==3.7.0
+pydantic==2.10.6
+pydantic[email]
+pymongo==4.11.3
+pytest==8.3.5
+pytest-asyncio
