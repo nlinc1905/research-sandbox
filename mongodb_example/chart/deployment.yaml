@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+  namespace: mongotest
+  labels:
+    app: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: centos/mongodb-36-centos7
+          ports:
+            - containerPort: 27017
+          env:
+            - name: MONGODB_USER
+              value: ""
+#              valueFrom:
+#                secretKeyRef:
+#                  name: mongodb-user
+#                  key: MONGODB_USER
+            - name: MONGODB_PASSWORD
+              value: ""
+#              valueFrom:
+#                secretKeyRef:
+#                  name: mongodb-password
+#                  key: MONGODB_PASSWORD
+            - name: MONGODB_DATABASE
+              value: "exampledb"
+#              valueFrom:
+#                secretKeyRef:
+#                  name: mongodb-database
+#                  key: MONGODB_DATABASE
+            - name: MONGODB_ADMIN_PASSWORD
+              value: ""
+#              valueFrom:
+#                secretKeyRef:
+#                  name: mongodb-admin-password
+#                  key: MONGODB_ADMIN_PASSWORD
+#          volumeMounts:
+#            - name: mongodb-data
+#              mountPath: /var/lib/mongodb/data
+#      volumes:
+#        - name: mongodb-data
+#          persistentVolumeClaim:
+#            claimName: mongodb-pvc
