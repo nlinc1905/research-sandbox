@@ -1,0 +1,35 @@
+version: '3.9'
+
+services:
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - fastapi_network
+
+  fastapi:
+    build: .
+    container_name: fastapi
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - celery
+    networks:
+      - fastapi_network
+
+  celery:
+    build: .
+    container_name: celery
+    command: celery -A celery_worker worker --loglevel=info
+    depends_on:
+      - redis
+    networks:
+      - fastapi_network
+
+networks:
+    fastapi_network:
+        driver: bridge
