@@ -30,6 +30,18 @@ services:
     networks:
       - fastapi_network
 
+  flower:
+    build: .
+    container_name: flower
+    command: celery -A celery_worker flower --port=5555 --broker=redis://redis:6379/0 --result-backend=redis://redis:6379/0
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+      - celery
+    networks:
+      - fastapi_network
+
 networks:
     fastapi_network:
         driver: bridge
