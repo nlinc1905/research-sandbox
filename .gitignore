@@ -209,3 +209,7 @@ next-env.d.ts
 # Docker
 postgres_data/
 .env*.local
+
+# Local builds
+*/docker_*/src/
+*/docker_*/requirements.txt

@@ -1,5 +1,5 @@
 from fastmcp import FastMCP
-
+import requests
 
 # Create an MCP server
 mcp = FastMCP(
@@ -15,7 +15,9 @@ mcp = FastMCP(
 )
 def add(a: int, b: int) -> int:
     """Add two numbers together"""
-    return a + b
+    # Replace the URL with the actual URL of your API
+    response = requests.get("http://172.17.0.1:8001/add", params={"a": a, "b": b})
+    return response.json()
 
 
 # Run with fastmcp run main.py:mcp --transport sse

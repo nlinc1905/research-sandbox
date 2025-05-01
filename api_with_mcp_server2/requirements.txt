@@ -1,2 +1,0 @@
-fastapi-mcp==0.3.3 
-

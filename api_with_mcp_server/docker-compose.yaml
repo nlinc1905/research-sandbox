@@ -2,8 +2,29 @@ version: '3.9'
 
 services:
   fastapi:
-    build: .
+    build:
+      context: ./docker_fastapi
+      dockerfile: Dockerfile
     container_name: fastapi
-    command: uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uv run uvicorn src.api:app --host 0.0.0.0 --port 8001 --reload
     ports:
-      - "8000:8000"
+      - "8001:8001"
+    networks:
+      - fastapi_network
+  
+  mcp:
+    build:
+      context: ./docker_mcp
+      dockerfile: Dockerfile
+    container_name: mcp
+    command: uv run src/mcp_server.py --host 0.0.0.0 --port 8002
+    ports:
+      - "8002:8002"
+    networks:
+      - fastapi_network
+    depends_on:
+      - fastapi
+
+networks:
+  fastapi_network:
+    driver: bridge
