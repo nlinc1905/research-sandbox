@@ -1,0 +1,5 @@
+fastapi==0.115.12
+fastmcp==2.2.6
+mcp==1.6.0
+uv==0.7.1
+uvicorn==0.34.2
