@@ -12,9 +12,9 @@ services:
   fastapi:
     build: .
     container_name: fastapi
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8001 --reload
     ports:
-      - "8000:8000"
+      - "8001:8001"
     depends_on:
       - redis
       - celery
