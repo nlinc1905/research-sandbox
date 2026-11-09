@@ -1,0 +1,41 @@
+# Databricks Apps scaffold for the MyAgent Quality dashboard
+# Copy to your Databricks App config file and adapt values for your workspace.
+
+name: myagent-quality-dashboard
+
+# Build/runtime dependencies. Databricks Apps can install from requirements.txt.
+python:
+  requirements:
+    - streamlit_app/requirements.txt
+
+# Entry command used by the Databricks App runtime container.
+# Keep this aligned with local run docs.
+command:
+  - streamlit
+  - run
+  - streamlit_app/app.py
+  - --server.port=${PORT}
+  - --server.address=0.0.0.0
+
+# Environment variable conventions used by streamlit_app/data_adapter.py
+# Choose one source via MyAgent_DATA_SOURCE and then set its companion variables.
+env:
+  # Common selector
+  MyAgent_DATA_SOURCE: json
+
+  # json source
+  MyAgent_JSON_DIR: streamlit_app/data
+
+  # api source
+  # MyAgent_API_BASE_URL: https://api.example.com/data
+  # MyAgent_API_TOKEN: {{secrets/MYAGENT_API_TOKEN}}
+  # MyAgent_API_TIMEOUT_SECONDS: "10"
+
+  # s3 source
+  # MyAgent_S3_BUCKET: my-bucket
+  # MyAgent_S3_PREFIX: dashboards/prod
+  # MyAgent_S3_REGION: us-east-1
+
+  # mlflow source
+  # MyAgent_MLFLOW_ARTIFACT_PATH: runs:/<run-id>/artifacts/data
+  # MyAgent_MLFLOW_TRACKING_URI: https://mlflow.example.com

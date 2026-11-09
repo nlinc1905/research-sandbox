@@ -56,6 +56,9 @@ node --input-type=module --check components/table.js
 ```
 search_agent_dashboard/
 ├── README.MD                           # This file
+├── databricks_app_scaffold/            # Databricks App config scaffold (entry command + env conventions)
+│   ├── app.yaml.example                # Example app config with Streamlit entry command and env keys
+│   └── .env.example                    # Environment variable convention template
 ├── streamlit_app/                      # Main application root
 │   ├── app.py                          # Streamlit app entry point; defines all UI logic
 │   ├── click_tables.py                 # Wrapper for custom HTML table component
@@ -260,6 +263,21 @@ Use the `streamlit_app` directory as the app source.
 Suggested entrypoint: `streamlit run app.py --server.port $PORT --server.address 0.0.0.0`
 
 If your Databricks App template supports `requirements.txt`, keep it as-is; otherwise install dependencies as part of your app build step.
+
+#### Scaffold files included
+
+The repo includes a Databricks App scaffold with an entry command and env conventions:
+
+- `databricks_app_scaffold/app.yaml.example`
+- `databricks_app_scaffold/.env.example`
+
+Use it as a starting point:
+
+1. Copy `databricks_app_scaffold/app.yaml.example` into your Databricks App config file.
+2. Keep the command aligned with this dashboard entry command:
+  `streamlit run streamlit_app/app.py --server.port=$PORT --server.address=0.0.0.0`
+3. Set `MyAgent_DATA_SOURCE` and only the companion variables for that source.
+4. Store secret values (for example API tokens) in Databricks secret references rather than plaintext.
 
 ### Environment configuration
 
