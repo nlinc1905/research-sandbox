@@ -1,0 +1,99 @@
+[
+  {
+    "id": "t-9f21",
+    "query": "Fee table 2024",
+    "profile": "C",
+    "customer": "Stark Invoices",
+    "lang": "EN",
+    "version": "v3",
+    "batch": "B-14",
+    "document": "D-14002",
+    "chunk": "c-0377",
+    "faithfulness": 0.41,
+    "cost": 0.034,
+    "latency": "5.9s",
+    "feedback": "down",
+    "mlflow_url": "https://mlflow.example.local/traces/t-9f21",
+    "spans": [
+      {"id": "root", "parent_id": null, "name": "chat_agent", "duration_ms": 5900, "cost": 0.034, "self_cost": 0, "status": "OK", "input": "Fee table 2024", "output": "Generated fee columns with missing table context.", "attributes": {"version": "v3", "faithfulness": 0.41, "cost_scope": "inclusive"}},
+      {"id": "plan", "parent_id": "root", "name": "llm.plan", "duration_ms": 600, "cost": 0.003, "self_cost": 0.003, "status": "OK", "input": "Fee table 2024", "output": "Use vector search to locate the 2024 fee schedule.", "attributes": {"input_tokens": 240, "output_tokens": 90}},
+      {"id": "search", "parent_id": "root", "name": "search_agent", "duration_ms": 1900, "cost": 0.008, "self_cost": 0.004, "status": "OK", "input": "Find fee table 2024", "output": "Retrieved the table body without its header.", "attributes": {"batch_id": "B-14", "document_id": "D-14002", "chunk_ids": ["c-0377"], "cost_scope": "inclusive"}},
+      {"id": "vector_search", "parent_id": "search", "name": "tool: vector_search", "duration_ms": 400, "cost": 0, "self_cost": 0, "status": "OK", "input": {"query": "fee table 2024", "top_k": 5}, "output": {"retrieved_chunks": ["c-0377"], "missing_context": "Header row is in c-0376 and was not retrieved."}, "attributes": {"batch_id": "B-14", "document_id": "D-14002", "chunk_id": "c-0377", "retrieval_result": "partial"}},
+      {"id": "rerank", "parent_id": "search", "name": "llm.rerank_query", "duration_ms": 500, "cost": 0.004, "self_cost": 0.004, "status": "OK", "input": "Fee table 2024; candidates: c-0377", "output": "Kept c-0377 as the highest ranked candidate.", "attributes": {"input_tokens": 420, "output_tokens": 80}},
+      {"id": "generate", "parent_id": "root", "name": "llm.generate (v3)", "duration_ms": 1300, "cost": 0.023, "self_cost": 0.023, "status": "WARNING", "input": "Answer using c-0377 (table body only).", "output": "Filled in missing column meanings instead of declining.", "attributes": {"faithfulness": 0.41, "input_tokens": 1820, "output_tokens": 380}}
+    ],
+    "analysis_answer": "The vector search returned chunk c-0377 (D-14002, B-14), but the table header was in c-0376 and not retrieved. Generator filled gaps, lowering faithfulness. Likely root cause: chunking split a table."
+  },
+  {
+    "id": "t-9f20",
+    "query": "Termination clause?",
+    "profile": "A",
+    "customer": "Acme Legal",
+    "lang": "EN",
+    "version": "v3",
+    "batch": "B-4",
+    "document": "D-4001",
+    "chunk": "c-0142",
+    "faithfulness": 0.93,
+    "cost": 0.014,
+    "latency": "3.1s",
+    "feedback": "up",
+    "mlflow_url": "https://mlflow.example.local/traces/t-9f20",
+    "spans": [
+      {"id": "root", "parent_id": null, "name": "chat_agent", "duration_ms": 3100, "cost": 0.014, "self_cost": 0, "status": "OK", "input": "Termination clause?", "output": "Answered using the cited termination clause.", "attributes": {"version": "v3", "faithfulness": 0.93, "cost_scope": "inclusive"}},
+      {"id": "plan", "parent_id": "root", "name": "llm.plan", "duration_ms": 400, "cost": 0.002, "self_cost": 0.002, "status": "OK", "input": "Termination clause?", "output": "Search the legal agreement for termination provisions.", "attributes": {"input_tokens": 180, "output_tokens": 60}},
+      {"id": "search", "parent_id": "root", "name": "search_agent", "duration_ms": 1200, "cost": 0.004, "self_cost": 0.004, "status": "OK", "input": "termination notice clause", "output": "Located expected clause in c-0142.", "attributes": {"batch_id": "B-4", "document_id": "D-4001", "chunk_ids": ["c-0142"], "cost_scope": "inclusive"}},
+      {"id": "vector_search", "parent_id": "search", "name": "tool: vector_search", "duration_ms": 300, "cost": 0, "self_cost": 0, "status": "OK", "input": {"query": "termination notice period", "top_k": 5}, "output": {"retrieved_chunks": ["c-0142"], "retrieval_result": "hit"}, "attributes": {"batch_id": "B-4", "document_id": "D-4001", "chunk_id": "c-0142"}},
+      {"id": "generate", "parent_id": "root", "name": "llm.generate (v3)", "duration_ms": 1300, "cost": 0.008, "self_cost": 0.008, "status": "OK", "input": "Termination clause context: c-0142.", "output": "90 days written notice (c-0142).", "attributes": {"faithfulness": 0.93, "input_tokens": 850, "output_tokens": 140}}
+    ],
+    "analysis_answer": "Nothing notable failed. Retrieval found the expected legal clause chunk and generation remained faithful."
+  },
+  {
+    "id": "t-9f1e",
+    "query": "List all parties",
+    "profile": "B",
+    "customer": "Initech Contracts",
+    "lang": "EN",
+    "version": "v2",
+    "batch": "B-11",
+    "document": "D-11004",
+    "chunk": "c-0210",
+    "faithfulness": 0.72,
+    "cost": 0.027,
+    "latency": "4.4s",
+    "feedback": "n/a",
+    "mlflow_url": "https://mlflow.example.local/traces/t-9f1e",
+    "spans": [
+      {"id": "root", "parent_id": null, "name": "chat_agent", "duration_ms": 4400, "cost": 0.027, "self_cost": 0, "status": "OK", "input": "List all parties", "output": "Returned parties with a possible omission.", "attributes": {"version": "v2", "faithfulness": 0.72, "cost_scope": "inclusive"}},
+      {"id": "plan", "parent_id": "root", "name": "llm.plan", "duration_ms": 500, "cost": 0.002, "self_cost": 0.002, "status": "OK", "input": "List all parties", "output": "Use contract metadata to find the MSA.", "attributes": {"input_tokens": 210, "output_tokens": 50}},
+      {"id": "search", "parent_id": "root", "name": "search_agent", "duration_ms": 1400, "cost": 0.008, "self_cost": 0.008, "status": "OK", "input": "MSA contract parties", "output": "Retrieved contract party section c-0210.", "attributes": {"batch_id": "B-11", "document_id": "D-11004", "chunk_ids": ["c-0210"], "cost_scope": "inclusive"}},
+      {"id": "metadata_search", "parent_id": "search", "name": "tool: metadata_search", "duration_ms": 600, "cost": 0, "self_cost": 0, "status": "OK", "input": {"contract_type": "msa"}, "output": {"retrieved_chunks": ["c-0210"]}, "attributes": {"batch_id": "B-11", "document_id": "D-11004", "chunk_id": "c-0210"}},
+      {"id": "generate", "parent_id": "root", "name": "llm.generate (v2)", "duration_ms": 1500, "cost": 0.017, "self_cost": 0.017, "status": "WARNING", "input": "Extract parties from c-0210.", "output": "Returned the two primary parties; an affiliate may be omitted.", "attributes": {"faithfulness": 0.72, "input_tokens": 1250, "output_tokens": 230}}
+    ],
+    "analysis_answer": "Output is mostly acceptable but has mild omission risk. Add richer extraction labels to improve profile B consistency."
+  },
+  {
+    "id": "t-9f1b",
+    "query": "Wer unterzeichnet?",
+    "profile": "A",
+    "customer": "Northwind Support",
+    "lang": "DE",
+    "version": "v2",
+    "batch": "B-5",
+    "document": "D-5003",
+    "chunk": "c-0021",
+    "faithfulness": 0.66,
+    "cost": 0.019,
+    "latency": "3.8s",
+    "feedback": "up",
+    "mlflow_url": "https://mlflow.example.local/traces/t-9f1b",
+    "spans": [
+      {"id": "root", "parent_id": null, "name": "chat_agent", "duration_ms": 3800, "cost": 0.019, "self_cost": 0, "status": "OK", "input": "Wer unterzeichnet?", "output": "Partially grounded answer about the signatory.", "attributes": {"version": "v2", "faithfulness": 0.66, "cost_scope": "inclusive"}},
+      {"id": "plan", "parent_id": "root", "name": "llm.plan", "duration_ms": 400, "cost": 0.002, "self_cost": 0.002, "status": "OK", "input": "Wer unterzeichnet?", "output": "Search the German document for signatory information.", "attributes": {"input_tokens": 180, "output_tokens": 60}},
+      {"id": "search", "parent_id": "root", "name": "search_agent", "duration_ms": 1200, "cost": 0.006, "self_cost": 0.006, "status": "OK", "input": "Unterzeichner Unterschrift", "output": "Retrieved c-0021 with incomplete signatory context.", "attributes": {"batch_id": "B-5", "document_id": "D-5003", "chunk_ids": ["c-0021"], "cost_scope": "inclusive"}},
+      {"id": "vector_search", "parent_id": "search", "name": "tool: vector_search", "duration_ms": 500, "cost": 0, "self_cost": 0, "status": "OK", "input": {"query": "Wer unterzeichnet?", "top_k": 5, "language": "DE"}, "output": {"retrieved_chunks": ["c-0021"], "retrieval_result": "partial"}, "attributes": {"batch_id": "B-5", "document_id": "D-5003", "chunk_id": "c-0021"}},
+      {"id": "generate", "parent_id": "root", "name": "llm.generate (v2)", "duration_ms": 1400, "cost": 0.011, "self_cost": 0.011, "status": "WARNING", "input": "German signatory context: c-0021.", "output": "Inferred a signatory without enough supporting context.", "attributes": {"faithfulness": 0.66, "input_tokens": 980, "output_tokens": 170}}
+    ],
+    "analysis_answer": "Answer is partially grounded but confidence should be lower. Improve reranking on German legal docs."
+  }
+]

@@ -1,0 +1,10 @@
+[
+  {"id": "cust_a1", "profile": "A", "name": "Acme Legal"},
+  {"id": "cust_a2", "profile": "A", "name": "Northwind Support"},
+  {"id": "cust_a3", "profile": "A", "name": "Globex Intranet"},
+  {"id": "cust_b1", "profile": "B", "name": "Initech Contracts"},
+  {"id": "cust_b2", "profile": "B", "name": "Umbrella Procurement"},
+  {"id": "cust_c1", "profile": "C", "name": "Stark Invoices"},
+  {"id": "cust_c2", "profile": "C", "name": "Wayne Forms"},
+  {"id": "cust_c3", "profile": "C", "name": "Hooli Claims"}
+]

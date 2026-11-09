@@ -1,0 +1,19 @@
+[
+  {"id": "D-2001", "batch_id": "B-2", "name": "contract_msa.pdf", "lang": "EN", "pages": 42, "chunks": 146, "chunk_score": 0.75, "embedding_score": 0.74, "hit_rate": 0.71, "retrievals": 120},
+  {"id": "D-2002", "batch_id": "B-2", "name": "policy_manual.pdf", "lang": "EN", "pages": 60, "chunks": 220, "chunk_score": 0.70, "embedding_score": 0.72, "hit_rate": 0.58, "retrievals": 86},
+
+  {"id": "D-3001", "batch_id": "B-3", "name": "annual_report.pdf", "lang": "EN", "pages": 55, "chunks": 180, "chunk_score": 0.79, "embedding_score": 0.83, "hit_rate": 0.77, "retrievals": 162},
+  {"id": "D-3002", "batch_id": "B-3", "name": "handbook_de.pdf", "lang": "DE", "pages": 31, "chunks": 128, "chunk_score": 0.74, "embedding_score": 0.79, "hit_rate": 0.66, "retrievals": 95},
+
+  {"id": "D-4001", "batch_id": "B-4", "name": "contract_amendment_2023.pdf", "lang": "EN", "pages": 18, "chunks": 64, "chunk_score": 0.82, "embedding_score": 0.88, "hit_rate": 0.94, "retrievals": 211},
+  {"id": "D-4002", "batch_id": "B-4", "name": "fee_schedule_2024.pdf", "lang": "EN", "pages": 24, "chunks": 92, "chunk_score": 0.76, "embedding_score": 0.85, "hit_rate": 0.88, "retrievals": 144},
+
+  {"id": "D-5003", "batch_id": "B-5", "name": "support_guide_de.pdf", "lang": "DE", "pages": 27, "chunks": 97, "chunk_score": 0.73, "embedding_score": 0.78, "hit_rate": 0.66, "retrievals": 118},
+  {"id": "D-6001", "batch_id": "B-6", "name": "tariff_table_de.pdf", "lang": "DE", "pages": 21, "chunks": 83, "chunk_score": 0.77, "embedding_score": 0.82, "hit_rate": 0.74, "retrievals": 132},
+
+  {"id": "D-11004", "batch_id": "B-11", "name": "vendor_extraction_template.pdf", "lang": "EN", "pages": 16, "chunks": 68, "chunk_score": 0.69, "embedding_score": 0.74, "hit_rate": 0.72, "retrievals": 101},
+  {"id": "D-12001", "batch_id": "B-12", "name": "entity_schema_v3.pdf", "lang": "EN", "pages": 19, "chunks": 72, "chunk_score": 0.73, "embedding_score": 0.79, "hit_rate": 0.76, "retrievals": 123},
+
+  {"id": "D-14002", "batch_id": "B-14", "name": "invoice_pack.pdf", "lang": "EN", "pages": 36, "chunks": 154, "chunk_score": 0.58, "embedding_score": 0.69, "hit_rate": 0.41, "retrievals": 138},
+  {"id": "D-15001", "batch_id": "B-15", "name": "form_submission_de.pdf", "lang": "DE", "pages": 29, "chunks": 116, "chunk_score": 0.66, "embedding_score": 0.72, "hit_rate": 0.55, "retrievals": 104}
+]

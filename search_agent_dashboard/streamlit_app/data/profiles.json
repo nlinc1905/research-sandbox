@@ -1,0 +1,51 @@
+[
+  {
+    "id": "A",
+    "name": "RAG knowledge retrieval and QA",
+    "score": 0.74,
+    "metrics": [
+      {"key": "precision", "name": "Precision", "value": 0.74},
+      {"key": "recall", "name": "Recall", "value": 0.68},
+      {"key": "faithfulness", "name": "Faithfulness", "value": 0.88},
+      {"key": "relevancy", "name": "Relevancy", "value": 0.84}
+    ],
+    "version_scores": [
+      {"version": "v1", "score": 0.67},
+      {"version": "v2", "score": 0.72},
+      {"version": "v3", "score": 0.74}
+    ],
+    "coverage_note": "Golden set: 10 queries (5 EN, 5 DE)"
+  },
+  {
+    "id": "B",
+    "name": "Structured extraction",
+    "score": 0.58,
+    "metrics": [
+      {"key": "field_f1", "name": "Field-level F1", "value": 0.58},
+      {"key": "schema_validity", "name": "Schema validity", "value": 0.91},
+      {"key": "null_rate", "name": "Null-rate", "value": 0.77}
+    ],
+    "version_scores": [
+      {"version": "v1", "score": 0.52},
+      {"version": "v2", "score": 0.56},
+      {"version": "v3", "score": 0.58}
+    ],
+    "coverage_note": "No golden set yet: needs labeled entities"
+  },
+  {
+    "id": "C",
+    "name": "Table and form digitization",
+    "score": 0.49,
+    "metrics": [
+      {"key": "table_accuracy", "name": "Table cell accuracy", "value": 0.49},
+      {"key": "table_structure", "name": "Structure (TEDS)", "value": 0.55},
+      {"key": "form_recall", "name": "Form field recall", "value": 0.46}
+    ],
+    "version_scores": [
+      {"version": "v1", "score": 0.42},
+      {"version": "v2", "score": 0.47},
+      {"version": "v3", "score": 0.49}
+    ],
+    "coverage_note": "No golden set yet: needs annotated tables/forms"
+  }
+]

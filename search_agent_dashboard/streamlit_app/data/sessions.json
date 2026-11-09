@@ -1,0 +1,75 @@
+[
+  {
+    "id": "s-4412",
+    "customer": "Acme Legal",
+    "profile": "A",
+    "lang": "EN",
+    "version": "v2",
+    "messages": [
+      {"speaker": "User", "text": "What is the notice period in the MSA?"},
+      {"speaker": "MyAgent", "text": "90 days written notice (c-0142)."},
+      {"speaker": "User", "text": "And for the 2023 amendment?"},
+      {"speaker": "MyAgent", "text": "I could not find an amendment in the indexed documents."},
+      {"speaker": "User", "text": "It is in the same folder, try again"},
+      {"speaker": "MyAgent", "text": "Still nothing found. Please check the file was uploaded."}
+    ],
+    "judge_snapshot": {
+      "goal_completion": "unresolved",
+      "inferred_satisfaction": 0.38,
+      "sentiment": "frustrated",
+      "retries": 1,
+      "no_answers": 2,
+      "thumbs": "down",
+      "total_cost": 0.061,
+      "trace_count": 3
+    },
+    "analysis_answer": "In turn 2 the search agent found no document for the 2023 amendment (vector search returned MSA chunks only). The user retried and got the same result. Likely cause: amendment missing from ingestion or in a failed batch."
+  },
+  {
+    "id": "s-4409",
+    "customer": "Northwind Support",
+    "profile": "A",
+    "lang": "DE",
+    "version": "v2",
+    "messages": [
+      {"speaker": "User", "text": "Wie setze ich das Passwort zuruck?"},
+      {"speaker": "MyAgent", "text": "Uber Einstellungen > Sicherheit (c-0021)."},
+      {"speaker": "User", "text": "Danke!"}
+    ],
+    "judge_snapshot": {
+      "goal_completion": "resolved",
+      "inferred_satisfaction": 0.94,
+      "sentiment": "positive",
+      "retries": 0,
+      "no_answers": 0,
+      "thumbs": "up",
+      "total_cost": 0.022,
+      "trace_count": 2
+    },
+    "analysis_answer": "The session resolved quickly with one grounded answer and no retries. Retrieval and generation both look healthy for this conversation."
+  },
+  {
+    "id": "s-4401",
+    "customer": "Stark Invoices",
+    "profile": "C",
+    "lang": "EN",
+    "version": "v3",
+    "messages": [
+      {"speaker": "User", "text": "Extract the line items from invoice 88"},
+      {"speaker": "MyAgent", "text": "Found 6 line items, but 2 totals could not be matched."},
+      {"speaker": "User", "text": "Show the table"},
+      {"speaker": "MyAgent", "text": "Table returned with 2 empty cells."}
+    ],
+    "judge_snapshot": {
+      "goal_completion": "partial",
+      "inferred_satisfaction": 0.55,
+      "sentiment": "neutral",
+      "retries": 0,
+      "no_answers": 0,
+      "thumbs": "n/a",
+      "total_cost": 0.047,
+      "trace_count": 2
+    },
+    "analysis_answer": "The extraction partially succeeded but table structure quality is low for this document class. This aligns with profile C being weaker and likely needs table-aware chunking improvements."
+  }
+]

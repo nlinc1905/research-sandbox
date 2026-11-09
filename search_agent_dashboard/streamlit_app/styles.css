@@ -1,0 +1,237 @@
+/* Fixed dark palette from the original HTML. No prefers-color-scheme override. */
+:root {
+    color-scheme: dark !important;
+    --iq-bg: #14171c;
+    --iq-card: #1d2128;
+    --iq-text: #e8eaee;
+    --iq-muted: #9aa3b2;
+    --iq-border: #2c323c;
+    --iq-accent: #6b9bff;
+    --iq-ok: #3ccf8e;
+    --iq-warning: #f0a531;
+    --iq-error: #ff6b6b;
+    --iq-chart-muted: #96a3b8;
+}
+
+html, body, .stApp, [data-testid="stAppViewContainer"],
+[data-testid="stMain"], [data-testid="stBottom"] {
+    background: var(--iq-bg) !important;
+    color: var(--iq-text) !important;
+}
+
+[data-testid="stHeader"], [data-testid="stSidebar"] {
+    background: var(--iq-card) !important;
+    color: var(--iq-text) !important;
+}
+
+.main .block-container {
+    max-width: 1180px;
+    padding-top: 1.2rem;
+}
+
+/* Inherit text colors instead of resetting every div/span (which breaks
+   semantic score colors, captions, and active tab labels). */
+h1, h2, h3, h4, h5, h6, [data-testid="stMarkdownContainer"],
+[data-testid="stWidgetLabel"], [data-testid="stMetricValue"] {
+    color: var(--iq-text) !important;
+}
+
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p,
+[data-testid="stMetricLabel"], [data-testid="stMetricLabel"] p {
+    color: var(--iq-muted) !important;
+}
+
+a { color: var(--iq-accent); }
+
+.draft-banner {
+    background: var(--iq-warning);
+    color: #000;
+    padding: 0.55rem 0.9rem;
+    border-radius: 0.65rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    border: 1px solid var(--iq-warning);
+}
+
+.card {
+    border: 1px solid var(--iq-border);
+    border-radius: 12px;
+    padding: 0.85rem 0.95rem;
+    background: var(--iq-card);
+    min-height: 132px;
+}
+
+.card h4 {
+    margin: 0 0 0.4rem 0;
+    font-size: 0.95rem;
+    color: var(--iq-muted) !important;
+}
+
+.score {
+    font-size: 1.85rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+}
+
+.good { color: var(--metric-good); }
+.warn { color: var(--metric-warn); }
+.bad { color: var(--metric-bad); }
+.neutral { color: var(--metric-neutral); }
+.metric-number { font-variant-numeric: tabular-nums; }
+.metric-card { background: var(--iq-card); border: 1px solid var(--iq-border); border-radius: 10px; padding: .5rem .65rem; }
+.metric-card .score { margin: .25rem 0 0; }
+.metric-legend { color: var(--iq-muted); font-size: .8rem; margin-bottom: .8rem; }
+.muted { color: var(--iq-muted); font-size: 0.84rem; }
+
+[data-testid="stTabs"] [data-baseweb="tab-list"] {
+    gap: 0.4rem;
+    border-bottom: 1px solid var(--iq-border);
+    background: transparent;
+}
+
+[data-testid="stTabs"] [data-baseweb="tab"] {
+    color: var(--iq-muted) !important;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+}
+
+[data-testid="stTabs"] [aria-selected="true"] {
+    color: var(--iq-accent) !important;
+    border-bottom: 2px solid var(--iq-accent);
+    font-weight: 600;
+}
+
+[data-testid="stTabs"] [data-baseweb="tab-highlight"] {
+    background: var(--iq-accent) !important;
+}
+
+[data-testid="stTabs"] [data-baseweb="tab-border"] {
+    background: var(--iq-border) !important;
+}
+
+/* Canvas-rendered dataframe cells are themed in .streamlit/config.toml. */
+[data-testid="stDataFrame"] {
+    background: var(--iq-card);
+    border: 1px solid var(--iq-border);
+    border-radius: 10px;
+    padding: 0.25rem;
+}
+
+[data-testid="stMetric"] {
+    background: var(--iq-card);
+    border: 1px solid var(--iq-border);
+    border-radius: 10px;
+    padding: 0.5rem 0.65rem;
+}
+
+[data-testid="stVerticalBlockBorderWrapper"] {
+    border-color: var(--iq-border) !important;
+    background: var(--iq-card) !important;
+}
+
+[data-testid="stSelectbox"] [role="group"],
+[data-baseweb="select"] > div, [data-baseweb="input"],
+[data-baseweb="base-input"], [data-testid="stTextInput"] input,
+[data-testid="stTextArea"] textarea {
+    background: var(--iq-bg) !important;
+    border-color: var(--iq-border) !important;
+    color: var(--iq-text) !important;
+    -webkit-text-fill-color: var(--iq-text);
+}
+
+input::placeholder, textarea::placeholder {
+    color: var(--iq-muted) !important;
+    -webkit-text-fill-color: var(--iq-muted);
+}
+
+[data-baseweb="popover"] [role="listbox"],
+[data-baseweb="popover"] ul, [data-testid="stDialog"] [role="dialog"] {
+    background: var(--iq-card) !important;
+    color: var(--iq-text) !important;
+    border-color: var(--iq-border) !important;
+}
+
+[role="option"], [data-baseweb="option"] {
+    color: var(--iq-text) !important;
+}
+
+[role="option"]:hover, [role="option"][aria-selected="true"] {
+    background: #27344a !important;
+}
+
+[data-testid="stButton"] button, [data-testid="stLinkButton"] a {
+    background: var(--iq-card);
+    color: var(--iq-text);
+    border-color: var(--iq-border);
+}
+
+[data-testid="stButton"] button:hover, [data-testid="stLinkButton"] a:hover {
+    color: var(--iq-accent);
+    border-color: var(--iq-accent);
+}
+
+/* Match the HTML's dark note panel with an amber dashed outline. */
+[data-testid="stAlertContainer"] {
+    background: var(--iq-card) !important;
+    border: 1px dashed var(--iq-warning) !important;
+    color: var(--iq-text) !important;
+}
+
+[data-testid="stCode"], [data-testid="stCode"] pre,
+[data-testid="stCode"] code {
+    background: var(--iq-card) !important;
+    color: var(--iq-text) !important;
+    border-color: var(--iq-border) !important;
+}
+
+[data-testid="stProgressBarTrack"] {
+    background: var(--iq-border) !important;
+}
+
+[data-testid="stProgressBarTrack"] > div {
+    background: var(--metric-neutral) !important;
+}
+
+.chat-bubble {
+    padding: 0.55rem 0.75rem;
+    border-radius: 10px;
+    border: 1px solid var(--iq-border);
+    background: var(--iq-card);
+    margin-bottom: 0.45rem;
+}
+
+.chat-bubble b { color: var(--iq-accent); }
+
+.filter-title {
+    font-size: 0.8rem;
+    color: var(--iq-muted);
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+}
+
+.ops-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.65rem;
+}
+
+.ops-item {
+    border: 1px solid var(--iq-border);
+    border-radius: 10px;
+    padding: 0.75rem 0.85rem;
+    background: var(--iq-card);
+}
+
+.ops-item .label {
+    font-size: 0.82rem;
+    color: var(--iq-muted);
+    margin-bottom: 0.25rem;
+}
+
+.ops-item .value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.2rem;
+}
+
+.ops-item .detail { font-size: 0.78rem; color: var(--iq-muted); }
