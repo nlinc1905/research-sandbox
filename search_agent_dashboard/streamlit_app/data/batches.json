@@ -1,14 +1,15 @@
 [
-  {"id": "B-2", "customer_id": "cust_a1", "profile": "A", "version": "v1", "lang": "EN", "ingested": "2026-11-02", "docs": 8, "chunk_score": 0.72, "embedding_score": 0.74, "hit_rate": 0.61, "retrieval_traffic": 520},
-  {"id": "B-3", "customer_id": "cust_a1", "profile": "A", "version": "v2", "lang": "EN/DE", "ingested": "2026-11-04", "docs": 11, "chunk_score": 0.76, "embedding_score": 0.81, "hit_rate": 0.72, "retrieval_traffic": 840},
-  {"id": "B-4", "customer_id": "cust_a1", "profile": "A", "version": "v3", "lang": "EN", "ingested": "2026-11-08", "docs": 13, "chunk_score": 0.79, "embedding_score": 0.86, "hit_rate": 0.93, "retrieval_traffic": 1260},
+  {"id": "B-2", "customer_id": "cust_a1", "profile": "A", "version": "v1", "lang": "EN", "ingested": "2026-11-02", "docs": 8, "chunk_score": 0.82, "embedding_score": 0.87, "hit_rate": 0.86, "retrieval_traffic": 520},
+  {"id": "B-3", "customer_id": "cust_a1", "profile": "A", "version": "v2", "lang": "EN/DE", "ingested": "2026-11-04", "docs": 11, "chunk_score": 0.88, "embedding_score": 0.9, "hit_rate": 0.89, "retrieval_traffic": 840},
+  {"id": "B-4", "customer_id": "cust_a1", "profile": "A", "version": "v3", "lang": "EN", "ingested": "2026-11-08", "docs": 13, "chunk_score": 0.92, "embedding_score": 0.95, "hit_rate": 0.96, "retrieval_traffic": 1260},
 
-  {"id": "B-5", "customer_id": "cust_a2", "profile": "A", "version": "v2", "lang": "DE", "ingested": "2026-11-05", "docs": 9, "chunk_score": 0.73, "embedding_score": 0.78, "hit_rate": 0.66, "retrieval_traffic": 690},
-  {"id": "B-6", "customer_id": "cust_a2", "profile": "A", "version": "v3", "lang": "DE", "ingested": "2026-11-08", "docs": 12, "chunk_score": 0.77, "embedding_score": 0.82, "hit_rate": 0.74, "retrieval_traffic": 910},
+  {"id": "B-5", "customer_id": "cust_a2", "profile": "A", "version": "v2", "lang": "DE", "ingested": "2026-11-05", "docs": 2, "chunk_score": 0.52, "embedding_score": 0.61, "hit_rate": 0.43, "retrieval_traffic": 430},
+  {"id": "B-6", "customer_id": "cust_a2", "profile": "A", "version": "v3", "lang": "DE", "ingested": "2026-11-08", "docs": 12, "chunk_score": 0.74, "embedding_score": 0.79, "hit_rate": 0.68, "retrieval_traffic": 910},
 
   {"id": "B-11", "customer_id": "cust_b1", "profile": "B", "version": "v2", "lang": "EN", "ingested": "2026-11-04", "docs": 14, "chunk_score": 0.70, "embedding_score": 0.75, "hit_rate": 0.72, "retrieval_traffic": 770},
   {"id": "B-12", "customer_id": "cust_b1", "profile": "B", "version": "v3", "lang": "EN", "ingested": "2026-11-07", "docs": 15, "chunk_score": 0.73, "embedding_score": 0.79, "hit_rate": 0.76, "retrieval_traffic": 990},
 
-  {"id": "B-14", "customer_id": "cust_c1", "profile": "C", "version": "v3", "lang": "EN", "ingested": "2026-11-07", "docs": 10, "chunk_score": 0.64, "embedding_score": 0.71, "hit_rate": 0.41, "retrieval_traffic": 650},
-  {"id": "B-15", "customer_id": "cust_c2", "profile": "C", "version": "v2", "lang": "DE", "ingested": "2026-11-06", "docs": 9, "chunk_score": 0.67, "embedding_score": 0.72, "hit_rate": 0.55, "retrieval_traffic": 540}
+  {"id": "B-14", "customer_id": "cust_c1", "profile": "C", "version": "v3", "lang": "EN", "ingested": "2026-11-07", "docs": 11, "chunk_score": 0.64, "embedding_score": 0.71, "hit_rate": 0.41, "retrieval_traffic": 776},
+  {"id": "B-15", "customer_id": "cust_c2", "profile": "C", "version": "v2", "lang": "DE", "ingested": "2026-11-06", "docs": 2, "chunk_score": 0.62, "embedding_score": 0.67, "hit_rate": 0.55, "retrieval_traffic": 200},
+  {"id": "B-16", "customer_id": "cust_b1", "profile": "B", "version": "v3", "lang": "EN", "ingested": "2026-11-08", "docs": 2, "chunk_score": 0.50, "embedding_score": 0.92, "hit_rate": 0.75, "retrieval_traffic": 200}
 ]

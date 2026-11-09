@@ -9,6 +9,7 @@ A demo dashboard for evaluating retrieval-augmented generation (RAG) and chat-wi
 **Key features**:
 - **Multi-profile evaluation**: Compare agent quality across different deployment variants (e.g., RAG vs. extraction vs. table digitization).
 - **Hierarchy drilldown**: Profile → Customer → Batch → Document → Retrieval traces → Span trees.
+- **Batch investigation**: Inspect a batch across all its customers, independently of the Profiles drilldown.
 - **Metric coloring**: Semantic green/amber/red status for quality scores, latency, costs, and error rates.
 - **Language filtering**: Filter all data by language (English, German, or both).
 - **Pluggable data sources**: Switch between local JSON, HTTP API, S3, or MLflow artifacts without UI changes.
@@ -88,7 +89,7 @@ search_agent_dashboard/
 Main Streamlit application. Contains:
 
 - **Metric configuration**: METRIC_THRESHOLDS dict defining green/amber/red boundaries for all metrics (chunk score, faithfulness, latency, cost, etc.).
-- **Rendering functions**: `render_overview()`, `render_profiles()`, `render_sessions()`, `render_traces()`.
+- **Rendering functions**: `render_overview()`, `render_profiles()`, `render_batches()`, `render_sessions()`, `render_traces()`. Profiles and Batches share document tables and diagnostics.
 - **Data loading**: Single cached `load_dashboard_data()` call that adapts between JSON/API/S3/MLflow sources without UI changes.
 - **Semantic coloring**: Helper functions `metric_cell()`, `category_cell()`, `metric_level()` that apply consistent coloring to cards, tables, and charts.
 - **Chart rendering**: `build_metric_trend_chart()` with threshold-aware background bands and point colors.
@@ -130,7 +131,7 @@ Client-side rendering and interaction:
 - **Row activation**: Click or keyboard (Enter/Space) to fire actions.
 - **Span trees**: Renders nested spans with disclosure arrows, duration, cost, and status.
 - **Metric display**: Applies Python-supplied semantic level (good/warn/bad/neutral) to cells.
-- **Source links**: Retrieval spans can link back to their source document in Profiles.
+- **Source links**: Retrieval spans can link back to their source document in Batches.
 
 #### `components/table.css`
 
@@ -166,8 +167,8 @@ Each file represents a database view or pipeline output:
 - **overview.json**: Global KPIs (knowledge_base_quality, retrieval_performance, generation_quality), operational metrics (latency, throughput, cost), trends by version, failure attribution.
 - **profiles.json**: Agent profiles with golden-dataset evaluation scores and version progression.
 - **customers.json**: Customer/account records linked to profiles.
-- **batches.json**: Document batches per customer; version-aware (v1, v2, v3) to support trend analysis.
-- **documents.json**: Individual documents with chunk score, embedding score, hit rate, retrieval count.
+- **batches.json**: Version-aware document batch summaries. The current mock records retain their legacy single-customer ownership; the Batches view does not require that restriction.
+- **documents.json**: Individual documents with chunk score, embedding score, hit rate, retrieval count. An optional `customer_id` overrides legacy batch ownership; an optional `version` overrides the batch version. No mixed-customer examples are included yet.
 - **sessions.json**: Production chat sessions with judge snapshots (goal completion, sentiment, cost, trace count).
 - **traces.json**: Retrieval traces with nested spans; each span includes input, output, timing, cost, attributes (e.g., retrieved chunk ID, faithfulness).
 
@@ -295,6 +296,7 @@ streamlit run app.py
 
 - Overview: global quality, ops metrics, version-aware trend, attribution, low-performing batches.
 - Profiles: hierarchy drilldown `profile -> customer -> batch -> document`, with version-specific metrics.
+- Batches: customer-independent batch list, ordered by lowest retrieval hit rate, with customer names and version, language, document/page/chunk counts, quality scores, and retrievals. Click a batch for its documents, then a document for shared diagnostics and trace links. Page/chunk totals cover the available language-filtered document records; other batch totals/scores come from the supplied summaries.
 - Sessions: experimental tab with mocked chat/session-level judge snapshot and natural-language analysis response.
 - Traces: clickable trace rows (with total cost), inline expandable span trees,
   MLflow links, and mocked natural-language analysis responses.
@@ -305,14 +307,27 @@ Interactive tables are ordinary HTML tables rendered through Streamlit's built-i
 component API. There is no checkbox/select column and no additional grid dependency.
 Click anywhere on a row, or focus it and press Enter/Space:
 
-- Overview batch row → Profiles, at that batch's documents.
+- Overview batch row → Batches, at that batch's documents across customers.
 - Profile customer → batches → documents → document diagnostics.
+- Batches row → all documents in that batch → document diagnostics; customer ownership is shown per document.
 - Breadcrumb links → the corresponding parent level.
 - Document retrieval row → Traces, with the matching trace expanded.
 - Trace row → expand/collapse its tree directly below the row.
 - Span row → input, output, attributes, timing, and cost details.
 - Span arrow → expand/collapse its child spans.
-- Retrieval span's source link → the corresponding document in Profiles.
+- Retrieval span's source link → the corresponding document in Batches.
+
+Batches keeps its selection separate from Profiles, so investigating a batch does
+not replace the profile/customer drilldown. Both views respect the global language
+filter. Profiles restricts document rows to the selected customer; Batches does not.
+For shared batches, Profiles derives customer-specific summaries from the available
+language-filtered documents (mean chunk/embedding scores, retrieval-weighted hit
+rate, and customer-only document/retrieval totals) rather than counting the entire
+batch for each customer. Single-customer batches retain their supplied summaries.
+Customer names are resolved from each document's optional `customer_id`, falling
+back to the batch's legacy `customer_id` only when the document field is absent.
+Unknown ownership is shown as an em dash rather than guessed. Existing sample data
+is unchanged and still contains only single-customer batches.
 
 Mock spans are structured records in `data/traces.json`, with `id`, `parent_id`,
 `name`, `duration_ms`, `cost`, `self_cost`, `status`, `input`, `output`, and

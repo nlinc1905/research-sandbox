@@ -1,53 +1,50 @@
 {
-  "banner": "DRAFT with fake data. Layout and interactions are the proposal, numbers are placeholders.",
-  "subtitle": "Pipeline (producer) vs agent (consumer), last 7 days",
-  "experimental_note": "Dashed lines on trends mark version changes: v1 baseline, v2 generator model A to B, v3 vector-search tool prompt change. Every metric below is stored with the version that produced it.",
   "kpis": [
     {
       "key": "knowledge_base_quality",
-      "title": "Knowledge base quality",
-      "score": 0.78,
-      "detail_metrics": [{"key": "chunk_score", "label": "chunk", "value": 0.76}, {"key": "embedding_score", "label": "embedding", "value": 0.81}],
-      "detail": "chunk 0.76, embedding 0.81"
+      "title": "Knowledge Base Quality",
+      "score": 0.85,
+      "detail_metrics": [{"key": "chunk_score", "label": "chunk", "value": 0.85}, {"key": "embedding_score", "label": "embedding", "value": 0.88}],
+      "detail": "chunk 0.85, embedding 0.88"
     },
     {
       "key": "retrieval_performance",
-      "title": "Retrieval performance",
-      "score": 0.71,
-      "detail_metrics": [{"key": "precision", "label": "precision", "value": 0.74}, {"key": "recall", "label": "recall", "value": 0.68}],
+      "title": "Retrieval Performance",
+      "score": 0.86,
+      "detail_metrics": [{"key": "precision", "label": "precision", "value": 0.89}, {"key": "recall", "label": "recall", "value": 0.84}],
       "detail_note": "(10 golden queries)",
-      "detail": "precision 0.74, recall 0.68 (10 golden queries)"
+      "detail": "precision 0.89, recall 0.84 (10 golden queries)"
     },
     {
       "key": "generation_quality",
-      "title": "Generation quality",
-      "score": 0.86,
-      "detail_metrics": [{"key": "faithfulness", "label": "faithfulness", "value": 0.88}, {"key": "relevancy", "label": "relevancy", "value": 0.84}],
-      "detail": "faithfulness 0.88, relevancy 0.84"
+      "title": "Generation Quality",
+      "score": 0.91,
+      "detail_metrics": [{"key": "faithfulness", "label": "faithfulness", "value": 0.94}, {"key": "relevancy", "label": "relevancy", "value": 0.86}],
+      "detail": "faithfulness 0.94, relevancy 0.86"
     }
   ],
   "ops_metrics": [
-    {"key": "latency_seconds", "title": "Latency p95", "numeric_value": 4.2, "value": "4.2s", "detail": "search 1.1s, LLM 3.0s", "detail_metrics": [{"key": "span_latency_seconds", "label": "search", "value": 1.1}, {"key": "span_latency_seconds", "label": "LLM", "value": 3.0}]},
-    {"key": "throughput_per_minute", "title": "Throughput", "numeric_value": 38, "value": "38/min", "detail": "ingest 12 docs/hr"},
-    {"key": "thumbs_up_rate", "title": "Thumbs-up rate", "numeric_value": 0.81, "value": "81%", "detail": "where a UI exists, 412 rated"},
-    {"key": "retry_rate", "title": "Retry rate", "numeric_value": 0.09, "value": "9%", "detail": "user rephrased within 2 turns"},
-    {"key": "no_answer_rate", "title": "No-answer rate", "numeric_value": 0.06, "value": "6%", "detail": "agent declined or empty retrieval"},
-    {"key": "trace_cost", "title": "Avg cost / trace", "numeric_value": 0.018, "value": "$0.018", "detail": "tokens summed over spans"}
+    {"key": "latency_seconds", "title": "Latency p95", "numeric_value": 3.8, "value": "3.8s", "detail": "search 1.0s, LLM 2.7s", "detail_metrics": [{"key": "span_latency_seconds", "label": "search", "value": 1.0}, {"key": "span_latency_seconds", "label": "LLM", "value": 2.7}]},
+    {"key": "throughput_per_minute", "title": "Throughput", "numeric_value": 34, "value": "34/min", "detail": "ingest 12 docs/hr"},
+    {"key": "thumbs_up_rate", "title": "Thumbs-up rate", "numeric_value": 0.84, "value": "84%", "detail": "where a UI exists, 412 rated"},
+    {"key": "retry_rate", "title": "Retry rate", "numeric_value": 0.08, "value": "8%", "detail": "user rephrased within 2 turns"},
+    {"key": "no_answer_rate", "title": "No-answer rate", "numeric_value": 0.05, "value": "5%", "detail": "agent declined or empty retrieval"},
+    {"key": "trace_cost", "title": "Avg cost / trace", "numeric_value": 0.019, "value": "$0.019", "detail": "tokens summed over spans"}
   ],
   "attribution": [
-    {"stage": "Chunking (split tables, orphan chunks)", "percent": 34},
-    {"stage": "Embedding (low similarity, outliers)", "percent": 18},
-    {"stage": "Retrieval strategy (wrong tool / filter)", "percent": 27},
-    {"stage": "Generation (unfaithful to good chunks)", "percent": 21}
+    {"stage": "Chunking", "percent": 39},
+    {"stage": "Embedding", "percent": 21},
+    {"stage": "Retrieval", "percent": 24},
+    {"stage": "Generation", "percent": 16}
   ],
   "trend": [
     {"day": "2026-11-03", "version": "v1", "knowledge_base_quality": 0.73, "retrieval_performance": 0.66, "generation_quality": 0.81},
     {"day": "2026-11-04", "version": "v1", "knowledge_base_quality": 0.74, "retrieval_performance": 0.67, "generation_quality": 0.81},
     {"day": "2026-11-05", "version": "v2", "knowledge_base_quality": 0.76, "retrieval_performance": 0.69, "generation_quality": 0.84},
     {"day": "2026-11-06", "version": "v2", "knowledge_base_quality": 0.76, "retrieval_performance": 0.70, "generation_quality": 0.84},
-    {"day": "2026-11-07", "version": "v3", "knowledge_base_quality": 0.78, "retrieval_performance": 0.71, "generation_quality": 0.86},
-    {"day": "2026-11-08", "version": "v3", "knowledge_base_quality": 0.78, "retrieval_performance": 0.71, "generation_quality": 0.86},
-    {"day": "2026-11-09", "version": "v3", "knowledge_base_quality": 0.79, "retrieval_performance": 0.72, "generation_quality": 0.87}
+    {"day": "2026-11-07", "version": "v3", "knowledge_base_quality": 0.79, "retrieval_performance": 0.74, "generation_quality": 0.87},
+    {"day": "2026-11-08", "version": "v3", "knowledge_base_quality": 0.82, "retrieval_performance": 0.79, "generation_quality": 0.89},
+    {"day": "2026-11-09", "version": "v3", "knowledge_base_quality": 0.85, "retrieval_performance": 0.86, "generation_quality": 0.91}
   ],
   "version_change_points": [
     {"version": "v2", "effective_day": "2026-11-05", "change": "Generator model A to B"},

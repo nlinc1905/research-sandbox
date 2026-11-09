@@ -39,10 +39,11 @@ export default function(component) {
             cell.textContent = String(value ?? '—');
         }
     };
-    const sourceButton = (row) => {
+    const sourceButton = (row, span) => {
         const button = node('button', 'Open source document →', 'source-link');
         button.type = 'button';
-        listen(button, 'click', () => fire(row, 'source'));
+        // A trace can retrieve documents belonging to different customers.
+        listen(button, 'click', () => fire(row, 'source', {span_id: span.id}));
         return button;
     };
     const renderSpans = (row, container) => {
@@ -110,7 +111,7 @@ export default function(component) {
                         detail.append(node('h5', label));
                         detail.append(node('pre', typeof value === 'string' ? value : JSON.stringify(value, null, 2)));
                     }
-                    if (span.attributes?.document_id) detail.append(sourceButton(row));
+                    if (span.attributes?.document_id) detail.append(sourceButton(row, span));
                     container.append(detail);
                 }
                 if (!collapsed.has(span.id)) renderBranch(span.id, depth + 1);

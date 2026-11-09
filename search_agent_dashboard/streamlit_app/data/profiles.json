@@ -2,17 +2,17 @@
   {
     "id": "A",
     "name": "RAG knowledge retrieval and QA",
-    "score": 0.74,
+    "score": 0.9,
     "metrics": [
-      {"key": "precision", "name": "Precision", "value": 0.74},
-      {"key": "recall", "name": "Recall", "value": 0.68},
-      {"key": "faithfulness", "name": "Faithfulness", "value": 0.88},
-      {"key": "relevancy", "name": "Relevancy", "value": 0.84}
+      {"key": "precision", "name": "Precision", "value": 0.91},
+      {"key": "recall", "name": "Recall", "value": 0.89},
+      {"key": "faithfulness", "name": "Faithfulness", "value": 0.93},
+      {"key": "relevancy", "name": "Relevancy", "value": 0.9}
     ],
     "version_scores": [
-      {"version": "v1", "score": 0.67},
-      {"version": "v2", "score": 0.72},
-      {"version": "v3", "score": 0.74}
+      {"version": "v1", "score": 0.75},
+      {"version": "v2", "score": 0.84},
+      {"version": "v3", "score": 0.9}
     ],
     "coverage_note": "Golden set: 10 queries (5 EN, 5 DE)"
   },

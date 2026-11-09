@@ -315,7 +315,7 @@ def _go(tab: str, **destination: Any) -> None:
     new tab and record selections. Used as on_click handler for navigation buttons
     and breadcrumb links.
     
-    :param tab: Target tab name ("Overview", "Profiles", "Sessions", "Traces").
+    :param tab: Target tab name ("Overview", "Profiles", "Batches", "Sessions", "Traces").
     :param destination: Keyword arguments for profile_id, customer_id, batch_id,
                        document_id, trace_id (passed to navigation.navigate).
     :return: None (updates session state, triggers Streamlit rerun).
@@ -473,11 +473,181 @@ def render_metric_trend_chart(trend_df: pd.DataFrame, version_change_points: lis
     st.caption(metric_hint(metric_key))
 
 
+def batch_customer_names(batch: dict[str, Any], documents: list[dict[str, Any]],
+                         customer_names: dict[str, str]) -> str:
+    """Describe every customer represented in a batch rather than one owner.
+
+    :param batch: Batch whose customer names should be displayed.
+    :param documents: Available document records, optionally language-filtered.
+    :param customer_names: Customer IDs mapped to display names.
+    :return: Sorted customer names, raw IDs for unknown customers, or an em dash.
+    """
+    return ", ".join(sorted(customer_names.get(cid, cid)
+                            for cid in navigation.batch_customer_ids(batch, documents))) or "—"
+
+
+def render_document_details(document: dict[str, Any], batch: dict[str, Any],
+                            traces: list[dict[str, Any]], selected_lang: str, *, key: str) -> None:
+    """Render shared document diagnostics and drillable retrieval traces.
+
+    :param document: Selected document with quality metrics and retrieval count.
+    :param batch: Parent batch used to identify matching traces.
+    :param traces: Trace records containing batch and document references.
+    :param selected_lang: Global language filter applied to retrieval traces.
+    :param key: Calling view's component namespace to prevent widget collisions.
+    :return: None; renders document details and links to the Traces tab.
+    """
+    st.markdown(f"#### {document['name']}")
+    d1, d2, d3 = st.columns(3)
+    with d1:
+        render_metric("Chunk score", "chunk_score", document["chunk_score"])
+    with d2:
+        render_metric("Embedding score", "embedding_score", document["embedding_score"])
+    with d3:
+        render_metric(f"Hit rate · {document['retrievals']} retrievals", "hit_rate", document["hit_rate"])
+    st.markdown("<div class='muted'>Chunk diagnostics (mock): avg tokens "
+                + cell_markup(metric_cell("tokens", 412)) + ", orphan chunks "
+                + cell_markup(metric_cell("orphan_rate", .03)) + ", tables split across chunks "
+                + cell_markup(metric_cell("split_tables", 2)) + ", duplicate chunks "
+                + cell_markup(metric_cell("duplicate_rate", .01)) + ".</div>", unsafe_allow_html=True)
+    hits = [t for t in traces if t["batch"] == batch["id"] and t["document"] == document["id"]
+            and matches_language(t["lang"], selected_lang)]
+    st.markdown("#### Recent retrieval traces for selected document")
+    st.caption("Production trace links only; these judge scores do not contribute to golden evaluation scores.")
+    if hits:
+        click_table(
+            ["Trace", "Query", "Chunk", "Faithfulness", "Version", "Cost"],
+            [{"id": t["id"], "cells": [t["id"], t["query"], t["chunk"], metric_cell("faithfulness", t["faithfulness"]),
+              t["version"], metric_cell("trace_cost", t["cost"])]} for t in hits],
+            key=f"{key}_document_traces_{document['id']}_{selected_lang}", label="Document retrieval traces",
+            on_action=lambda action: _go("Traces", trace_id=action["id"]),
+        )
+        st.caption("Click a retrieval row to open its trace tree.")
+    else:
+        st.info("No recent traces for this document and language.")
+
+
+def render_batch_documents(batch: dict[str, Any], documents: list[dict[str, Any]],
+                            customers: list[dict[str, Any]], *, key: str,
+                            on_action: Callable[[dict[str, Any]], None]) -> None:
+    """Render drillable document rows with per-document customer ownership.
+
+    :param batch: Parent batch providing legacy customer and version defaults.
+    :param documents: Documents already scoped to this batch and language filter.
+    :param customers: Customer records used to display names instead of IDs.
+    :param key: Unique component key for the calling view and current batch.
+    :param on_action: Callback receiving the selected document's row action.
+    :return: None; renders the document table or an empty-state message.
+    """
+    if not documents:
+        st.info("No documents match this batch and language.")
+        return
+    customer_names = {c["id"]: c["name"] for c in customers}
+    rows = []
+    for document in documents:
+        # Document ownership overrides the legacy single-owner batch field.
+        customer_id = navigation.document_customer_id(document, batch)
+        rows.append({"id": document["id"], "cells": [
+            batch["id"], document["name"], customer_names.get(customer_id, customer_id or "—"),
+            document.get("version", batch["version"]), document["lang"],
+            metric_cell("count", document["pages"]), metric_cell("count", document["chunks"]),
+            metric_cell("chunk_score", document["chunk_score"]),
+            metric_cell("embedding_score", document["embedding_score"]),
+            metric_cell("count", document["retrievals"]), metric_cell("hit_rate", document["hit_rate"]),
+        ]})
+    click_table(
+        ["Batch", "Document", "Customer", "Version", "Language", "Pages", "Chunks", "Chunk score",
+         "Embedding score", "Retrievals", "Hit rate"],
+        rows, key=key, label="Batch documents", on_action=on_action,
+    )
+    st.caption("Click a document row to see diagnostics and retrievals.")
+
+
+def render_batches(selected_lang: str, batches: list[dict[str, Any]],
+                   documents: list[dict[str, Any]], customers: list[dict[str, Any]],
+                   traces: list[dict[str, Any]]) -> None:
+    """Render the customer-independent Batches → Documents → Diagnostics drilldown.
+
+    :param selected_lang: Global language filter for batches and their documents.
+    :param batches: Batch summaries, not restricted to a selected customer/profile.
+    :param documents: All documents, optionally carrying their own customer_id.
+    :param customers: Customer records used to label mixed-customer batches.
+    :param traces: Retrieval traces for the selected document's diagnostics.
+    :return: None; renders batch summaries, documents, or document details.
+    """
+    st.caption("Inspect ingestion batches across customers. A batch can contain documents from multiple customers.")
+    visible = sorted((b for b in batches if matches_language(b["lang"], selected_lang)), key=lambda b: b["hit_rate"])
+    if not visible:
+        st.warning("No batches match the selected language filter.")
+        return
+    visible_documents = [d for d in documents if matches_language(d["lang"], selected_lang)]
+    customer_names = {c["id"]: c["name"] for c in customers}
+    batch = next((b for b in visible if b["id"] == st.session_state.batches_batch_id), None)
+
+    with st.container(horizontal=True, vertical_alignment="center"):
+        st.button("All batches", key="batches_crumb_all", type="tertiary", on_click=_go, args=("Batches",))
+        if batch:
+            st.caption("/")
+            st.button(f"{batch['id']} ({batch['version']})", key="batches_crumb_batch", type="tertiary",
+                      on_click=_go, args=("Batches",), kwargs={"batch_id": batch["id"]})
+
+    if batch is None:
+        st.markdown("### Document Batches")
+        rows = []
+        for candidate in visible:
+            batch_docs = [d for d in visible_documents if d["batch_id"] == candidate["id"]]
+            rows.append({"id": candidate["id"], "cells": [
+                candidate["id"], batch_customer_names(candidate, visible_documents, customer_names),
+                candidate["version"], candidate["lang"], metric_cell("count", candidate["docs"]),
+                metric_cell("count", sum(d["pages"] for d in batch_docs)),
+                metric_cell("count", sum(d["chunks"] for d in batch_docs)),
+                metric_cell("chunk_score", candidate["chunk_score"]),
+                metric_cell("embedding_score", candidate["embedding_score"]),
+                metric_cell("count", candidate["retrieval_traffic"]), metric_cell("hit_rate", candidate["hit_rate"]),
+            ]})
+        click_table(
+            ["Batch", "Customers", "Version", "Language", "Documents", "Pages", "Chunks", "Chunk score",
+             "Embedding score", "Retrievals", "Hit rate"],
+            rows, key=f"all_batches_{selected_lang}", label="Document batches",
+            on_action=lambda action: _go("Batches", batch_id=action["id"]),
+        )
+        # The demo contains sampled documents; do not imply their totals cover a
+        # full batch or recompute the supplied batch-level evaluation scores.
+        st.caption("Lowest hit rates first. Click a batch to inspect its documents. Pages/chunks total the available "
+                   "documents matching the language filter; document counts, retrievals, and scores are batch summaries.")
+        return
+
+    batch_docs = [d for d in visible_documents if d["batch_id"] == batch["id"]]
+    document = next((d for d in batch_docs if d["id"] == st.session_state.batches_document_id), None)
+    st.caption(f"Customers: {batch_customer_names(batch, batch_docs, customer_names)}")
+    if document:
+        customer_id = navigation.document_customer_id(document, batch)
+        st.caption(f"Document: {document['name']} · Customer: {customer_names.get(customer_id, customer_id or '—')} · "
+                   f"Version: {document.get('version', batch['version'])} · Language: {document['lang']}")
+        render_document_details(document, batch, traces, selected_lang, key="batches")
+        return
+
+    st.markdown(f"### Documents in {batch['id']} ({batch['version']})")
+    for column, (label, metric, value) in zip(st.columns(4), [
+        ("Chunk score", "chunk_score", batch["chunk_score"]),
+        ("Embedding score", "embedding_score", batch["embedding_score"]),
+        ("Retrieval hit rate", "hit_rate", batch["hit_rate"]),
+        ("Retrieval traffic", "count", batch["retrieval_traffic"]),
+    ]):
+        with column:
+            render_metric(label, metric, value)
+    render_batch_documents(
+        batch, batch_docs, customers, key=f"batch_documents_{batch['id']}_{selected_lang}",
+        on_action=lambda action: _go("Batches", batch_id=batch["id"], document_id=action["id"]),
+    )
+
+
 def render_overview(
     selected_lang: str,
     overview: dict[str, Any],
     batches: list[dict[str, Any]],
     customers: list[dict[str, Any]],
+    documents: list[dict[str, Any]],
 ) -> None:
     """Render the Overview tab showing global quality KPIs, trends, and lowest-performing batches.
     
@@ -486,7 +656,7 @@ def render_overview(
     - Operational metrics (thumbs-up rate, retry rate, latency, throughput, cost)
     - Version-aware trend charts with threshold bands and version markers
     - Failure attribution breakdown as stacked percentages
-    - Table of lowest hit-rate batches with drilldown to Profiles
+    - Table of lowest hit-rate batches with drilldown to Batches
     
     All metrics use METRIC_THRESHOLDS for consistent coloring. Language filter hides
     non-matching batches. Note: Overview scores are golden-evaluation only, not impacted
@@ -494,13 +664,13 @@ def render_overview(
     
     :param selected_lang: User-selected language filter ("All", "English", "German").
     :param overview: Dict with keys: kpis, ops_metrics, trend, version_change_points,
-                    attribution, experimental_note, banner, subtitle.
+                    attribution.
     :param batches: Full list of batch records (filtered by language inside function).
     :param customers: Full list of customer records (for name lookup).
+    :param documents: Document records used to resolve customers within each batch.
     :return: None (renders Overview content to Streamlit app).
     """
-    st.caption("Evaluation scope: Overview uses golden-dataset evaluation only. Production sessions/traces do not change these scores.")
-    st.info(overview["experimental_note"])
+    st.caption("Metrics on the Overview tab come from golden datasets only. Production sessions/traces do not change these scores.")
 
     kpi_cols = st.columns(len(overview["kpis"]))
     for col, item in zip(kpi_cols, overview["kpis"]):
@@ -520,7 +690,7 @@ def render_overview(
                 unsafe_allow_html=True,
             )
 
-    st.markdown("### Operational metrics")
+    st.markdown("### Operational Metrics")
     desired_order = [
         "Thumbs-up rate",
         "Retry rate",
@@ -546,7 +716,8 @@ def render_overview(
     ops_html += "</div>"
     st.markdown(ops_html, unsafe_allow_html=True)
 
-    st.markdown("### Trend by version")
+    st.markdown("### Trend by Version")
+    st.caption("Vertical dashed lines mark version changes. Horizontal dashed lines mark thresholds.")
     trend_df = pd.DataFrame(overview["trend"])
     trend_df["day"] = pd.to_datetime(trend_df["day"])
     chart_order = [
@@ -562,15 +733,16 @@ def render_overview(
             title=title,
         )
 
-    st.markdown("#### Version change points")
+    st.markdown("#### Version Changes")
+    st.caption("Each version change is a vertical dashed line in the trend charts above.")
     st.dataframe(
         pd.DataFrame(overview["version_change_points"]),
         width="stretch",
         hide_index=True,
     )
 
-    st.markdown("### Failure attribution")
-    st.caption("Share of all attributed failures, not an absolute failure rate; neutral coloring is intentional.")
+    st.markdown("### Failure Attribution by Stage")
+    st.caption("Share of all failures attributed to each stage. This is NOT an absolute failure rate by stage. Neutral coloring is intentional.")
     for item in overview["attribution"]:
         st.markdown(f"{escape(item['stage'])} — {cell_markup(metric_cell('failure_share', item['percent'], str(item['percent']) + '%'))}", unsafe_allow_html=True)
         st.progress(item["percent"] / 100)
@@ -580,21 +752,27 @@ def render_overview(
         st.warning("No batches match the selected language filter.")
         return
     customer_names = {c["id"]: c["name"] for c in customers}
+    visible_documents = [d for d in documents if matches_language(d["lang"], selected_lang)]
     worst = sorted(visible, key=lambda b: b["hit_rate"])[:4]
     lookup = {b["id"]: b for b in worst}
 
     def open_batch(action: dict[str, Any]) -> None:
-        batch = lookup[action["id"]]
-        _go("Profiles", profile_id=batch["profile"], customer_id=batch["customer_id"], batch_id=batch["id"])
+        """Open a low-hit-rate batch without imposing a customer selection.
 
-    st.markdown("### Lowest retrieval hit rate batches")
+        :param action: Table row action identifying a currently visible batch.
+        :return: None; switches to the batch's document list in Batches.
+        """
+        batch = lookup[action["id"]]
+        _go("Batches", batch_id=batch["id"])
+
+    st.markdown("### Document Batches with Lowest Retrieval Hit Rates")
     click_table(
-        ["Batch", "Version", "Customer", "Hit rate", "Chunk score", "Embedding score"],
-        [{"id": b["id"], "cells": [b["id"], b["version"], customer_names[b["customer_id"]],
+        ["Batch", "Version", "Customers", "Hit rate", "Chunk score", "Embedding score"],
+        [{"id": b["id"], "cells": [b["id"], b["version"], batch_customer_names(b, visible_documents, customer_names),
           metric_cell("hit_rate", b["hit_rate"]), metric_cell("chunk_score", b["chunk_score"]), metric_cell("embedding_score", b["embedding_score"])]} for b in worst],
         key=f"overview_batches_{selected_lang}", label="Lowest retrieval hit rate batches", on_action=open_batch,
     )
-    st.caption("Click a batch row to open its documents in Profiles.")
+    st.caption("Click a batch row to open its documents in Batches, across all customers.")
 
 
 def render_profiles(
@@ -628,8 +806,7 @@ def render_profiles(
     :param traces: Full list of trace records (filtered by language inside).
     :return: None (renders Profiles content to Streamlit app).
     """
-    st.caption("Evaluation scope: Profile metrics are golden-dataset based and versioned. They are not computed from production chats/traces.")
-    st.caption("Hierarchy: Profile -> Customer -> Batch -> Document")
+    st.caption("Metrics on the Profiles tab come from golden datasets only. Production sessions/traces do not change these scores.")
 
     cards = st.columns(len(profiles))
     for col, profile in zip(cards, profiles):
@@ -638,7 +815,7 @@ def render_profiles(
             st.markdown(
                 (
                     "<div class='card'>"
-                    f"<h4>Profile {profile['id']}</h4>"
+                    f"<h4>Profile {profile['id']} Composite Score</h4>"
                     f"<div><b>{profile['name']}</b></div>"
                     f"<div class='score'>{score}</div>"
                     f"<div class='muted'>{profile['coverage_note']}</div>"
@@ -653,59 +830,72 @@ def render_profiles(
     # Keep widget state separate from navigation state so a cross-tab link can
     # update the profile even when the previous profile's widget was mounted.
     st.session_state.profile_filter = profile_id
-    st.selectbox("Profile", profile_options, key="profile_filter", on_change=_profile_changed)
+    st.selectbox("Filter to Profile", profile_options, key="profile_filter", on_change=_profile_changed)
     profile = profile_map[profile_id]
 
     vcol1, vcol2 = st.columns(2)
     with vcol1:
-        st.markdown("#### Profile metric snapshot")
+        st.markdown(f"#### Profile {profile_id} Metric Snapshot")
         click_table(["Metric", "Value"],
                 [{"id": m["key"], "cells": [m["name"], metric_cell(m["key"], m["value"])]} for m in profile["metrics"]],
-                key=f"profile_metrics_{profile_id}", label="Profile metric snapshot")
+                key=f"profile_metrics_{profile_id}", label=f"Profile {profile_id} Metric snapshot")
     with vcol2:
-        st.markdown("#### Version scores")
-        click_table(["Version", "Score"],
+        st.markdown(f"#### Composite Scores for Profile {profile_id} by Version")
+        click_table(["Version", "Composite Score"],
                 [{"id": v["version"], "cells": [v["version"], metric_cell("profile_score", v["score"])]} for v in profile["version_scores"]],
-                key=f"profile_versions_{profile_id}", label="Version scores")
+                key=f"profile_versions_{profile_id}", label=f"Composite Scores for Profile {profile_id} by Version")
 
     profile_batches = [b for b in batches if b["profile"] == profile_id and matches_language(b["lang"], selected_lang)]
+    visible_documents = [d for d in documents if matches_language(d["lang"], selected_lang)]
+
+    def customer_batch_records(customer_id: str) -> list[dict[str, Any]]:
+        """Scope shared batch summaries to the selected customer's documents.
+
+        :param customer_id: Customer whose batch metrics should be displayed.
+        :return: Legacy batch summaries or customer-specific shared-batch summaries.
+        """
+        records = []
+        for candidate in profile_batches:
+            if customer_id not in navigation.batch_customer_ids(candidate, visible_documents):
+                continue
+            if len(navigation.batch_customer_ids(candidate, documents)) <= 1:
+                # Preserve supplied evaluation summaries for existing single-owner
+                # batches; sampled documents do not represent their full totals.
+                records.append(candidate)
+                continue
+            scoped = [d for d in visible_documents if d["batch_id"] == candidate["id"]
+                      and navigation.document_customer_id(d, candidate) == customer_id]
+            if not scoped:
+                # A batch-level language tag does not guarantee a sampled
+                # document exists for this customer in the selected language.
+                continue
+            retrievals = sum(d["retrievals"] for d in scoped)
+            # Shared-batch totals cannot be attributed in full to every customer.
+            # Use that customer's available documents: mean quality scores and a
+            # retrieval-weighted hit rate (unknown when there are no retrievals).
+            records.append({**candidate, "docs": len(scoped), "retrieval_traffic": retrievals,
+                            "chunk_score": sum(d["chunk_score"] for d in scoped) / len(scoped),
+                            "embedding_score": sum(d["embedding_score"] for d in scoped) / len(scoped),
+                            "hit_rate": (sum(d["hit_rate"] * d["retrievals"] for d in scoped) / retrievals
+                                         if retrievals else None)})
+        return records
+
     customer = next((c for c in customers if c["id"] == st.session_state.selected_customer_id), None)
-    batch = next((b for b in profile_batches if b["id"] == st.session_state.selected_batch_id), None)
+    selected_batches = customer_batch_records(customer["id"]) if customer else []
+    batch = next((b for b in selected_batches if b["id"] == st.session_state.selected_batch_id), None)
     document = next((d for d in documents if d["id"] == st.session_state.selected_document_id), None)
     _breadcrumbs(profile_id, customer, batch, document)
 
     def destination(**parts: Any) -> None:
+        """Keep profile context when opening a customer, batch, or document.
+
+        :param parts: Customer, batch, and document IDs for the destination.
+        :return: None; updates the Profiles navigation selection.
+        """
         _go("Profiles", profile_id=profile_id, **parts)
 
     if document and batch and customer:
-        st.markdown(f"#### {document['name']}")
-        d1, d2, d3 = st.columns(3)
-        with d1:
-            render_metric("Chunk score", "chunk_score", document["chunk_score"])
-        with d2:
-            render_metric("Embedding score", "embedding_score", document["embedding_score"])
-        with d3:
-            render_metric(f"Hit rate · {document['retrievals']} retrievals", "hit_rate", document["hit_rate"])
-        st.markdown("<div class='muted'>Chunk diagnostics (mock): avg tokens "
-                    + cell_markup(metric_cell("tokens", 412)) + ", orphan chunks "
-                    + cell_markup(metric_cell("orphan_rate", .03)) + ", tables split across chunks "
-                    + cell_markup(metric_cell("split_tables", 2)) + ", duplicate chunks "
-                    + cell_markup(metric_cell("duplicate_rate", .01)) + ".</div>", unsafe_allow_html=True)
-        hits = [t for t in traces if t["batch"] == batch["id"] and t["document"] == document["id"]
-                and matches_language(t["lang"], selected_lang)]
-        st.markdown("#### Recent retrieval traces for selected document")
-        st.caption("Production trace links only; these judge scores do not contribute to golden evaluation scores.")
-        if hits:
-            click_table(
-                ["Trace", "Query", "Chunk", "Faithfulness", "Version", "Cost"],
-                                [{"id": t["id"], "cells": [t["id"], t["query"], t["chunk"], metric_cell("faithfulness", t["faithfulness"]),
-                                    t["version"], metric_cell("trace_cost", t["cost"])]} for t in hits],
-                key=f"document_traces_{document['id']}_{selected_lang}", label="Document retrieval traces",
-                on_action=lambda action: _go("Traces", trace_id=action["id"]),
-            )
-            st.caption("Click a retrieval row to open its trace tree.")
-        else:
-            st.info("No recent traces for this document and language.")
+        render_document_details(document, batch, traces, selected_lang, key="profiles")
         return
 
     if batch and customer:
@@ -718,25 +908,23 @@ def render_profiles(
             render_metric("Retrieval hit rate", "hit_rate", batch["hit_rate"])
         with c4:
             render_metric("Retrieval traffic", "count", batch["retrieval_traffic"])
-        batch_docs = [d for d in documents if d["batch_id"] == batch["id"] and matches_language(d["lang"], selected_lang)]
+        # Profiles stays customer-scoped even when Batches exposes the entire
+        # mixed-customer ingestion run; do not leak other customers' documents.
+        batch_docs = [d for d in visible_documents if d["batch_id"] == batch["id"]
+                      and navigation.document_customer_id(d, batch) == customer["id"]]
         st.markdown(f"#### Documents in {batch['id']} ({batch['version']})")
-        if not batch_docs:
-            st.info("No documents match this batch and language.")
-            return
-        click_table(
-            ["Document", "Version", "Language", "Pages", "Chunks", "Chunk score", "Embedding score", "Retrievals", "Hit rate"],
-                        [{"id": d["id"], "cells": [d["name"], batch["version"], d["lang"], metric_cell("count", d["pages"]), metric_cell("count", d["chunks"]),
-                            metric_cell("chunk_score", d["chunk_score"]), metric_cell("embedding_score", d["embedding_score"]), metric_cell("count", d["retrievals"]), metric_cell("hit_rate", d["hit_rate"])]} for d in batch_docs],
-            key=f"documents_{batch['id']}_{selected_lang}", label="Batch documents",
+        render_batch_documents(
+            batch, batch_docs, customers, key=f"documents_{batch['id']}_{selected_lang}",
             on_action=lambda action: destination(customer_id=customer["id"], batch_id=batch["id"], document_id=action["id"]),
         )
-        st.caption("Click a document row to see diagnostics and retrievals.")
         return
 
     if customer:
-        customer_batches = [b for b in profile_batches if b["customer_id"] == customer["id"]]
+        customer_batches = selected_batches
         st.markdown(f"#### Batches for {customer['name']}")
         st.caption("Each processing version is listed separately. Click a batch to see its documents.")
+        st.caption("Shared-batch metrics cover this customer's available language-filtered documents; "
+                   "single-customer batches retain the supplied evaluation summaries.")
         click_table(
             ["Batch", "Version", "Ingested", "Docs", "Chunk score", "Embedding score", "Hit rate", "Queries", "Language"],
             [{"id": b["id"], "cells": [b["id"], b["version"], b["ingested"], metric_cell("count", b["docs"]),
@@ -751,17 +939,19 @@ def render_profiles(
     for candidate in customers:
         if candidate["profile"] != profile_id:
             continue
-        subset = [b for b in profile_batches if b["customer_id"] == candidate["id"]]
+        subset = customer_batch_records(candidate["id"])
         if not subset:
             continue
+        hit_rates = [b["hit_rate"] for b in subset if b["hit_rate"] is not None]
         customer_rows.append({"id": candidate["id"], "cells": [
             candidate["name"], metric_cell("count", len(subset)),
             metric_cell("chunk_score", sum(b["chunk_score"] for b in subset) / len(subset)),
             metric_cell("embedding_score", sum(b["embedding_score"] for b in subset) / len(subset)),
-            metric_cell("hit_rate", sum(b["hit_rate"] for b in subset) / len(subset)),
+            metric_cell("hit_rate", sum(hit_rates) / len(hit_rates) if hit_rates else None),
             metric_cell("count", sum(b["retrieval_traffic"] for b in subset)), ", ".join(sorted({b["version"] for b in subset})),
         ]})
-    st.markdown(f"#### Customers in profile {profile_id}")
+    st.markdown(f"#### Customers in Profile {profile_id}")
+    st.caption("Shared-batch metrics use each customer's available documents, not the entire batch's traffic.")
     if not customer_rows:
         st.info("No customers have data for this profile and language.")
         return
@@ -790,10 +980,11 @@ def render_sessions(selected_lang: str, sessions: list[dict[str, Any]]) -> None:
     :param sessions: List of session dicts with id, customer, lang, messages, judge_snapshot.
     :return: None (renders Sessions content to Streamlit app).
     """
-    st.caption("Data scope: Sessions tab reflects production-run interaction data and observability signals.")
+    st.caption("Metrics on the Sessions tab come from production-run interactions.")
     st.warning(
-        "Experimental: this tab assumes future capabilities (session-level judges, "
-        "stored chats, and session IDs linked to traces). Data shown is mocked."
+        "This tab assumes future capabilities that we do not yet have "
+        "(session-level judges,stored chats, and session IDs linked to traces).",
+        icon="⚠️"
     )
 
     filtered = [s for s in sessions if matches_language(s["lang"], selected_lang)]
@@ -831,13 +1022,13 @@ def render_sessions(selected_lang: str, sessions: list[dict[str, Any]]) -> None:
 
     left, right = st.columns([1, 1])
     with left:
-        st.markdown("#### Session judge metrics")
+        st.markdown("#### Session Metrics from LLM Judge")
         click_table(["Metric", "Value"], [{"id": name, "cells": [name, value]} for name, value in snapshot],
                 key=f"session_metrics_{session['id']}", label="Session judge metrics")
     with right:
-        st.markdown("#### Ask about this session")
+        st.markdown("#### Ask About this Session")
         _ = st.text_input("Question", value="Why was the user frustrated?")
-        if st.button("Ask session analyzer"):
+        if st.button("Ask LLM"):
             st.success(session["analysis_answer"])
 
 
@@ -877,7 +1068,7 @@ def render_traces(selected_lang: str, traces: list[dict[str, Any]], batches: lis
     - Table of recent traces with query, profile, customer, version, cost, latency, feedback
     - Expandable trace rows showing full span trees with input/output/attributes
     - Span-level details when selecting a span (duration, cost, status, faithfulness)
-    - Links from retrieval spans back to their source documents in Profiles tab
+    - Links from retrieval spans back to their source documents in Batches tab
     - Mock natural-language analysis interface for trace questions
     
     Trace data decorates spans with metric cells (via decorate_trace) before rendering.
@@ -889,17 +1080,14 @@ def render_traces(selected_lang: str, traces: list[dict[str, Any]], batches: lis
     
     :param selected_lang: User-selected language filter ("All", "English", "German").
     :param traces: List of trace dicts with spans, cost, latency, feedback, batch/document/chunk.
-    :param batches: List of batch dicts (for source doc linking via batch/profile ids).
+    :param batches: List of batch dicts used to validate source-document destinations.
     :return: None (renders Traces content to Streamlit app).
     """
-    st.caption("Data scope: Traces tab reflects production-run traces and span-level metrics. It does not modify overview/profile scores.")
+    st.caption("Metrics on the Traces tab come from golden datasets and production-run interactions.")
     filtered = [t for t in traces if matches_language(t["lang"], selected_lang)]
     if not filtered:
         st.warning("No traces match the selected language filter.")
         return
-
-    st.markdown("#### Ask about a trace")
-    _ = st.text_input("Trace question", value="What went wrong for query Fee table 2024?")
 
     lookup = {t["id"]: t for t in filtered}
 
@@ -909,10 +1097,14 @@ def render_traces(selected_lang: str, traces: list[dict[str, Any]], batches: lis
         if kind == "row":
             _go("Traces", trace_id=None if st.session_state.selected_trace_id == trace["id"] else trace["id"])
         elif kind == "source":
-            batch = next((b for b in batches if b["id"] == trace["batch"]), None)
+            span = next((s for s in trace.get("spans", []) if s["id"] == action.get("span_id")), None)
+            attributes = span.get("attributes", {}) if span else {}
+            source_batch_id = attributes.get("batch_id", trace["batch"])
+            source_document_id = attributes.get("document_id", trace["document"])
+            batch = next((b for b in batches if b["id"] == source_batch_id), None)
             if batch:
-                _go("Profiles", profile_id=batch["profile"], customer_id=batch["customer_id"],
-                    batch_id=batch["id"], document_id=trace["document"])
+                # Source documents need not share one customer with the batch.
+                _go("Batches", batch_id=batch["id"], document_id=source_document_id)
         elif any(s["id"] == action.get("span_id") for s in trace.get("spans", [])):
             span_id = action["span_id"]
             if kind == "span":
@@ -926,7 +1118,6 @@ def render_traces(selected_lang: str, traces: list[dict[str, Any]], batches: lis
                 st.session_state.collapsed_span_ids = sorted(collapsed)
 
     st.markdown("#### Recent traces")
-    st.caption("Click any trace row to expand/collapse its tree. Click a span row to inspect its input, output, and attributes.")
     click_table(
         ["Trace", "Query", "Profile", "Customer", "Version", "Batch / document / chunk", "Faithfulness", "Cost", "Latency", "Feedback"],
         [{"id": t["id"], "cells": [t["id"], t["query"], t["profile"], t["customer"], t["version"],
@@ -938,10 +1129,13 @@ def render_traces(selected_lang: str, traces: list[dict[str, Any]], batches: lis
         key=f"traces_{selected_lang}", label="Recent traces", on_action=trace_action,
     )
     selected_trace = lookup.get(st.session_state.selected_trace_id)
-    if st.button("Ask trace analyzer", disabled=selected_trace is None) and selected_trace:
+
+    st.markdown("#### Analyze a Trace")
+    _ = st.text_input("Question", value="What went wrong?")
+    if st.button("Ask LLM", disabled=selected_trace is None) and selected_trace:
         st.success(selected_trace["analysis_answer"])
     if not selected_trace:
-        st.caption("Select a trace row before asking for its mock analysis.")
+        st.caption("Select a trace row before asking a question")
 
 
 def main() -> None:
@@ -954,7 +1148,7 @@ def main() -> None:
     4. Load dashboard data (DashboardData) from configured adapter (JSON/API/S3/MLflow)
     5. Initialize navigation state with profile IDs
     6. Render header, language filter, and metric legend
-    7. Render four tabs: Overview, Profiles, Sessions, Traces
+    7. Render five tabs: Overview, Profiles, Batches, Sessions, Traces
     8. Each tab lazy-renders only when opened (tab.open check)
     
     Error handling: If data loading fails, display error message and stop.
@@ -983,32 +1177,30 @@ def main() -> None:
 
     _init_navigation_state(profiles)
 
-    st.markdown(f"<div class='draft-banner'>{overview['banner']}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='draft-banner'>DRAFT with fake data. Layout and interactions are the proposal, numbers are placeholders.</div>", unsafe_allow_html=True)
     header_col, filter_col = st.columns([5, 2])
     with header_col:
         st.title("MyAgent Quality")
-        st.caption(overview["subtitle"])
+        st.caption("Pipeline (producer) and Agent (consumer), last 7 days")
     with filter_col:
         with st.container(border=True):
-            st.markdown("<div class='filter-title'>Global filter</div>", unsafe_allow_html=True)
+            st.markdown("<div class='filter-title'>Language Filter</div>", unsafe_allow_html=True)
             selected_lang = st.selectbox("Language", ["All", "English", "German"], index=0, label_visibility="collapsed")
 
-    st.markdown("<div class='metric-legend'>"
-                "<span class='good'>Green: target met</span> · <span class='warn'>Amber: watch</span> · "
-                "<span class='bad'>Red: action needed</span> · <span class='neutral'>Gray: context / no target</span>"
-                "<br>Illustrative draft thresholds, not production SLOs. Hover metric numbers for their limits.</div>",
-                unsafe_allow_html=True)
     navigation.validate(st.session_state, customers, batches, documents, traces, selected_lang)
-    tab_overview, tab_profiles, tab_sessions, tab_traces = st.tabs(
-        ["Overview", "Profiles", "Sessions", "Traces"], key="active_tab", on_change="rerun",
+    tab_overview, tab_profiles, tab_batches, tab_sessions, tab_traces = st.tabs(
+        ["Overview", "Profiles", "Batches", "Sessions", "Traces"], key="active_tab", on_change="rerun",
     )
 
     if tab_overview.open:
         with tab_overview:
-            render_overview(selected_lang, overview, batches, customers)
+            render_overview(selected_lang, overview, batches, customers, documents)
     if tab_profiles.open:
         with tab_profiles:
             render_profiles(selected_lang, profiles, customers, batches, documents, traces)
+    if tab_batches.open:
+        with tab_batches:
+            render_batches(selected_lang, batches, documents, customers, traces)
     if tab_sessions.open:
         with tab_sessions:
             render_sessions(selected_lang, sessions)
